@@ -175,11 +175,45 @@ public:
         return newPrimIdx;
     }
 
+    struct StackItem {
+        size_t nodeIndex;
+        AABB<float> bounds;
+    };
+
     // Appends primitive indicies whose bounds intersect with the given queryBounds to candidates.
     // Returns the number of intersection candidates found
     uint32_t queryIntersecting(const AABB<float>& queryBounds, std::vector<uint32_t>& candidates) {
-        // TODO -- do not use recursion, but you may emulate it yourself.
-        return 0;
+        uint32_t numCandidates = 0;
+        std::vector<StackItem> stack;
+        stack.push_back({0, mBounds});
+
+        while (!stack.empty()) {
+            StackItem item = stack.back();
+            stack.pop_back();
+            QuadTreeNode node = mNodes[item.nodeIndex];
+
+            if (!node.isLeaf()) {
+                for (uint32_t direction = 0; direction < 4; ++direction) {
+                    AABB<float> childBounds = item.bounds;
+                    aabbEnter(childBounds, static_cast<OrdinalDirection>(direction));
+                    if (childBounds.intersects(queryBounds)) {
+                        stack.push_back({node.childIdx + direction, childBounds});
+                    }
+                }
+            }
+
+            uint32_t currPrimIndex = node.primitivesIdx;
+            while (currPrimIndex != INVALID_IDX) {
+                if (mPrimitiveBounds[currPrimIndex].intersects(queryBounds)) {
+                    candidates.push_back(currPrimIndex);
+                    numCandidates += 1;
+                }
+                currPrimIndex = mNextPrimitiveIdx[currPrimIndex];
+            }
+        }
+
+
+        return numCandidates;
     }
 
     // suitable for sparse updates
