@@ -1,3 +1,8 @@
 a.
-b.
-c.
+b. What happens is that the grid keeps being splits because no splits can separate points that are on top of each other.
+So the new child that holds those points will always be above 8 and so on. One way to alleviate this is to stop splitting until
+a certain depth.
+c. Scene objects would move cells because the splits lines of the grid would stay the same while the object move.
+This means that quadtrees are not suited for scenes that move or rotate because it uses fixed positions in the world.
+This could technically be fixed by rebuilt the tree every time but that would be costly. It also fails when objects
+are put on top of each other or really close to each other.
