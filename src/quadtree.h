@@ -288,17 +288,41 @@ private:
     // OrdinalDirection::INVALID.
     // Precondition: query is not empty. You may assume a priori that currentCell is not empty.
     // Precondition: currentCell contains query.
-    OrdinalDirection aabbQueryQuadrant(const AABB<float>& query,
-                                       const AABB<float>& currentCell) const {
-        return {};
+    OrdinalDirection aabbQueryQuadrant(const AABB<float>& query, const AABB<float>& currentCell) const {
+        const sf::Vector2f middle = currentCell.middle();
+
+        const bool isCompletelyTop = query.maxPoint.y <= middle.y;
+        const bool isCompletelyBottom = query.minPoint.y >= middle.y;
+        const bool isCompletelyLeft = query.maxPoint.x <= middle.x;
+        const bool isCompletelyRight = query.minPoint.x >= middle.x;
+
+        if ((!isCompletelyBottom && !isCompletelyTop) || (!isCompletelyLeft && !isCompletelyRight)) {
+            return OrdinalDirection::INVALID_DIRECTION;
+        }
+
+        const int bottom = isCompletelyBottom << 1;
+        const int right = bottom | isCompletelyRight;
+        return static_cast<OrdinalDirection>(right);
     };
-    // TODO
 
     // modifies a given AABB to obtain the resulting AABB if we were entering the cell on its
     // "direction" quadrant
     // Precondition: direction is not INVALID
-    void aabbEnter(AABB<float>& bounds, OrdinalDirection direction) const {};
-    // TODO
+    void aabbEnter(AABB<float>& bounds, OrdinalDirection direction) const {
+        const sf::Vector2f middle = bounds.middle();
+
+        if (direction & 2) {
+            bounds.minPoint.y = middle.y;
+        } else {
+            bounds.maxPoint.y = middle.y;
+        }
+
+        if (direction & 1) {
+            bounds.minPoint.x = middle.x;
+        } else {
+            bounds.maxPoint.x = middle.x;
+        }
+    };
 
     AABB<float> mBounds;
     size_t mMaxPrimitivesPerLeaf;
